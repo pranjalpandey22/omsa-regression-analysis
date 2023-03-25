@@ -1,0 +1,334 @@
+---
+title: "ISYE6414 - Midterm Exam 1 - Open Book Section (R) - Part 2"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Instructions
+
+This R Markdown file includes the questions, the empty code chunk sections for your code, and the text blocks for your responses. Answer the questions below by completing this R Markdown file. You may make slight adjustments to get the file to knit/convert but otherwise keep the formatting the same. Once you've finished answering the questions, submit your responses in a single knitted file as *HTML* only.
+
+There are 13 questions total, each worth between 3-8.5 points. Partial credit may be given if your code is correct but your conclusion is incorrect or vice versa.
+
+*Next Steps:*
+
+1.  Save this .Rmd file in your R working directory - the same directory where you will download the "datafull.csv" data file into. Having both files in the same directory will help in reading the .csv file.
+
+2.  Read the question and create the R code necessary within the code chunk section immediately below each question. Knitting this file will generate the output and insert it into the section below the code chunk. 
+
+3.  Type your answer to the questions in the text block provided immediately after the response prompt.
+
+4.  Once you've finished answering all questions, knit this file and submit the knitted file as *HTML* on Canvas.
+
+### Mock Example Question
+
+This will be the exam question - each question is already copied from Canvas and inserted into individual text blocks below, *you do not need to copy/paste the questions from the online Canvas exam.*
+
+```{r}
+# Example code chunk area. Enter your code below the comment`
+
+
+```
+
+**Mock Response to Example Question**:  This is the section where you type your written answers to the question. Depending on the question asked, your typed response may be a number, a list of variables, a few sentences, or a combination of these elements. 
+
+
+
+**Ready? Let's begin. We wish you the best of luck!**
+
+**Recommended Packages**
+```{r}
+library(car)
+library(ggplot2)
+```
+
+
+## house repair cost Data Analysis
+
+For this exam, you will be building a model to predict the repair cost of roofs (*repaircost*).
+
+The "datafull.csv" data set consists of the following variables:
+
+* *repaircost*: repair cost of the house
+* *rooftype*: roof type of the house
+* *year*: year of the house
+* *flood_status*: no flood or flood insurance
+* *homevalue*: home value of the house
+* *flooring*: flooring of the house
+* *residents*: number of previous residents of the house
+
+Read the data and answer the questions below. Assume a significance threshold of 0.05 for hypothesis tests unless stated otherwise.
+
+```{r}
+# Read the data set
+houses = read.csv('datafull.csv', header=TRUE)
+#Set rooftype and flood_status as categorical
+houses$rooftype<-as.factor(houses$rooftype)
+houses$flood_status<-as.factor(houses$flood_status)
+head(houses)
+```
+
+**Note:** For all of the following questions, treat all variables as quantitative variables except for *rooftype*, and *flood_status*. They have already been converted to categorical variables in the above code. 
+
+
+### Question 1 - 5pts
+
+Create an ANOVA model, called **anovamodel**, to compare the mean house repair cost (*repaircost*) among the different house roof types (*rooftype*). Display the corresponding ANOVA table.
+
+A) Identify the value of the mean squared error (MSE) from the ANOVA table.  
+
+B) Provide the formula that is used to calculate the MSE in the table, and clearly explain what this quantity represents in the context of ANOVA. 
+
+```{r}
+#Code to create ANOVA model...
+anovamodel <- aov(houses$repaircost ~ houses$rooftype)
+
+summary(anovamodel)
+```
+
+**Response to Question 1A**: 1.305e+08 </br>
+In the context of this problem, MSE represents the mean squared error is also pooled variance estimator, which is used to compare means from the 
+different populations assuming that the variance is the same across all such populations. MSE is used to measure the within-group variability.  
+**Response to Question 1B**: 
+
+**Formula**: 
+A quick and easy way to calculate MSE is to calculate this = (SSE/Df) 
+**Explanation**: 
+The interpretation in the context of ANOVA, as mentioned before, is that this is a measure to calculate the within-group variability when testing for 
+equal means and hence used as the pooled variance estimator.  
+
+
+### Question 2 - 4pts
+
+A) What can you conclude from the ANOVA table with respect to the test of equal means at a significance level of 0.05 (FAIL TO REJECT or REJECT the null hypothesis)? Explain your answer using the values from the ANOVA Table.
+
+B) Given your answer in part A, explain what this conclusion means in the context of the house data analysis problem.
+
+**Response to Question 2A**: 
+We see that the p value is much much less than the siginificance level provided at 0.05, hence we rightfully REJECT the null hypothesis.  
+
+**Response to Question 2B**:  
+Given that we REJECT the null hypothesis, which states that all groups or categories have equal means, we can conclude that at least 1 of the means 
+we have is statistically significant different mean.  
+
+
+### Question 3 - 5.5 pts
+
+Conduct a pairwise comparison of the mean *repaircost* for the different *rooftypes* using the Tukey method. Use a **90%** confidence level for this comparison.
+
+A) According to the pairwise comparison, are the means of *jerkinhead* and *hexagonal* plausibly equal? Explain how you came to your conclusion.
+Note: you can use Control + F to search the printed output easily.
+
+B) Provide an interpretation of "diff" in the context of the repaircost between *jerkinhead* and *hexagonal*. *(Note: provide this interpretation regardless of the means being statistically significantly different/equal)*
+
+```{r}
+# Code to create pairwise-comparison...
+TukeyHSD(anovamodel, conf.level = 0.90)
+```
+
+**Response to Question 3A**:    
+Yes, we can say that the means of *jerkinhead* and *hexagonal* plausibly equal - if we notice the confidence interval, we will see that 0 is contained in the interval and the p-value is 1. 
+This means that these two variables can have the same mean as the confidence interval of their differences contains 0. As also supported by the p-value, the difference is not that statistically significant.</br>
+**Response to Question 3B**:  
+The diff term means that the mean value jump in jerkinhead mean keeping the hexagonal mean fixed. </br>
+
+
+### Question 4 - 8.5 pts
+
+Perform a residual analysis on the ANOVA model (**anovamodel**). State whether each of the three ANOVA model assumptions holds and why you came to the conclusion.   
+```{r}
+# Code to perform residual analysis
+plot(anovamodel$fitted, anovamodel$residuals, xlab="fitted values", ylab="residuals", main="Residual Plot")
+
+qqPlot(anovamodel$residuals, ylab ="residuals", main ="Quantile Plot of Residuals")
+```
+
+**Response to Question 4**:  
+
+**Assumption 1**: Constant Variance </br>
+The constant variance assumption does not hold as we see a megaphone shape in the plot which suggests that the variance is increasing as fitted values increase.
+Ideally they should be randomly scattered around the zero line. </br>
+**Assumption 2**: Independence </br> 
+With the nature of data being exact values, we do not see any particular clusters being formed, it is just that a lot of variance on fixed fitted values. 
+So Independence assumption holds. </br> 
+**Assumption 3**: Normality </br>
+The normality assumption holds if we see the data following the normal line of 45 degree incline extremely closely but that is not what is happening here as we 
+see long tails far away from that line. So normality assumption does not hold. </br>
+
+
+### Question 5 - 4 pts  
+
+Based on your assessment of the assumptions (Question 4), is the ANOVA model (**anovamodel**) a good fit? If not, how can you try to improve the fit? Provide two recommendations and specify which problem(s) could be improved by each recommendation. *(Note: Do not apply your recommendations.)*
+
+**Response to Question 5**: 
+
+**Assessment on GOF**: No we cannot say that this anovamodel is a good fit because it is violating 2 out of 3 assumptions. </br>
+
+**Recommendation 1 and problem(s)**: 
+We can try a boxCox transformation and find the optimal lambda value to transform the response variable. This can probably help with the normality assumption.</br>  
+**Recommendation 2 and problem(s)**: 
+We can also try transforming the predictor variable by some non-linear function like perhaps logarithmic, exponential etc. </br>
+
+
+### Question 6 - 5pts
+
+Now consider the quantitative predicting variables ONLY: *year*, *homevalue*, *flooring*, *residents*.
+
+Compute the correlation coefficient (*r*) between each quantitative variable and the response (*repaircost*). 
+
+A) Which predicting variable has the strongest linear relationship with the response? Which one has the weakest linear relationship?
+
+B) Interpret the value of the strongest correlation coefficient in the context of the problem. Include strength (weak, moderate, strong) and direction (positive, negative).
+Note: You may consider > 0.3 and < 0.7 as moderate strength.
+
+```{r}
+# Code to calculate correlation...
+cor(houses$repaircost, houses$year)
+cor(houses$repaircost, houses$homevalue)
+cor(houses$repaircost, houses$flooring)
+cor(houses$repaircost, houses$residents)
+ 
+```
+
+**Response to Question 6A**:  
+
+**Var with strongest correlation**: year </br>
+
+**Var with weakest correlation**: homevalue </br>
+
+**Response to Question 6B**:    
+Due to inflation, housing market collapse etc. of course year will be one of the best correlated predictors. In terms of relative strength, 
+year is moderate, and homevalue, flooring, residents are all weakly correlated predictors. A value of 0.4182736 can be rightfully considered 
+moderate as the value is less than 50% and it is positively correlated - which means this value moves up as the repaircost goes up - which 
+actually makes sense in the real world. Comparing the weakly correlated predictors we have as per strength - 
+homevalue < residents < flooring - these are all negatively correlated - which means that as these values go up, repaircost goes down and vice versa. 
+(One thing to note here is that we are still talking about correlation and NOT causation. ) </br>
+### Question 7 - 4pts
+
+Create a scatter plot to describe the relationship between the house repair cost (*repaircost*) and the home value driven by the house (*homevalue*). Describe the general trend (direction and form).
+
+```{r}
+# Code to create scatter plot...
+plot(houses$repaircost, houses$homevalue, xlab="Repair Cost", ylab="Home Value", main="Repair Cost x Home Value")
+```
+
+**Response to Question 7**:  
+The relationship between homevalue and repaircost is definitely non-linear. We can see from the plot that the correlation value from previous answer is correctly justified. 
+The biggest chunk of change happens in only one direction - repaircost - and homevalue forms a band to cover a high range of values for repaircost. This means that a change in 
+repaircost is not necessariy aligned with a change in homevalue at all. We can also say that the direction of variance for both homevalue and repaircost is not the same. We also notice
+ a drop in values for homevalue with increasing repaircost making the correlation slightly negative. 
+
+### Question 8 - 4pts
+
+Create a linear regression model, called **lm.full**, with *repaircost* as the response variable and with **ALL** remaining variables (quantitative and qualitative) as the predictors. Display the summary table for the model. *Note: Treat all variables as quantitative variables except for rooftype, and flood_status. Include an intercept.*  
+
+A) Is the model significant overall using an alpha of 0.01?  Why/Why not?  
+
+```{r}
+# Code to create model and display summary table
+lm.full <- lm(repaircost ~., data=houses)
+
+summary(lm.full)
+```
+
+**Response to Question 8A**:  
+Yes the model is overall significant as the p-value is less than the significance level provided which is 0.01. 
+
+### Question 9 - 3pts
+
+What is the estimated coefficient for *year* in **lm.full**? Provide a brief meaningful interpretation of the estimated regression coefficient for *year* in **lm.full**. 
+
+**Response to Question 9**:  
+Coefficient of year = 7.664e+02 </br>
+This coefficient states that on average there will be a change of 7.664e+02 in the response variable with every 1 unit change in year given that all other predictors are kept constant. </br>
+
+
+### Question 10 - 4pts
+
+What are the bounds for a **95%** confidence interval on the coefficient for *residents*? Using this confidence interval, is the coefficient for *residents* plausibly equal to zero at this confidence level, given all other predictors in the model? Explain.
+
+```{r}
+# Code to calculate 95% CI...
+confint(lm.full, "residents", level=0.95)
+
+```
+
+**Response to Question 10**:    
+The coefficient for residents from the summary = 696.1
+The CI = (-1018.058, 2410.17) which contains 0 - This implies that the coefficient for residents can be ZERO at 95% confidence interval. But this is just one sided, we should analyse more by doing a partial F-test 
+to figure out if the nested version of the model without residents is actually statistically significantly better. 
+
+### Question 11 - 4pts
+
+Create a third model, called **lm.full2**, by adding an interactive term for home value driven per user (homevalue/residents) to **lm.full**. Display the summary table for this model.
+
+A) Examine the summary tables for **lm.full2** and **lm.full**. Is there any significant change in the direction and/or statistical significance of the regression coefficients? If so, list one change.
+
+```{r}
+# Code to create lm.full2 and display summary table
+houses$home_value_driven_per_user <- houses$homevalue/houses$residents
+
+lm.full2 <- lm(repaircost ~., data=houses)
+
+summary(lm.full2)
+```
+
+**Response to Question 11A**:  
+Yes we see that the direction for residents coefficient has reversed now and is now statistically significant. 
+
+
+### Question 12 - 4pts 
+
+Perform a Partial F-test on the new model (**lm.full2**) vs the previous model (**lm.full**), using $\alpha=0.05$.
+
+A) State the Null and Alternative Hypothesis for this Partial F-test.
+
+B) Do you *reject* or *fail to reject* the null hypothesis? Explain your answer using the output. 
+
+C) Based on these results, does the new variable (the interactive term for homevalue driven per user) add to the explanatory power of the model, given all other predictors are included? (Yes or No should suffice in conjunction w/ 12B) 
+
+```{r}
+# Code for Partial F-Test...
+anova(lm.full, lm.full2)
+```
+
+**Response to Question 12A**:  
+NULL - Models are statistically different -> Coefficients removed from the model are zero </br>
+ALTERNATIVE - At least 1 of the removed coefficients is not zero. </br>
+
+**Response to Question 12B**:   
+p-value is less than the siginificance level of 0.05 which means we can reject the null hypotyhesis that the models are different. So adding/removing the 
+new interactive term has not added to the explanatory power of the model.  </br>
+
+**Response to Question 12C**:  
+No, adding the variable does not improve the explanatory power.</br>
+
+
+### Question 13 - 5pts  
+
+Using **lm.full** model, what is the predicted *repaircost* and corresponding **90% prediction interval** for **no flood** **2016** **aframe** with **2** prior residents, flooring **1** and **10,000** home value?  Provide an interpretation of your results. 
+
+*(Note: The data point has been provided. Ensure you are using lm.full not lm.full2)*
+
+```{r}
+# new observation...
+newpt <- data.frame(rooftype='aframe', year=2016, flood_status="no flood",
+                    residents=2, flooring= 1, homevalue=10000)
+
+# Code for prediction interval...
+predict(lm.full, newpt, interval="prediction", level=0.90)
+```
+
+**Response to Question 13**:  
+In this case the 90% prediction interval is between 5104.815 and 50522.56. This tells us that the model would predict on average between these bounds with 95% confidence;
+with a predicted response of 27813.69.
+
+
+**The End.**
